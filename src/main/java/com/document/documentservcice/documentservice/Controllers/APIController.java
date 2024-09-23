@@ -22,10 +22,17 @@ public class APIController {
     @PostMapping("/uploadDocument")
     public ResponseEntity<String> uploadDocument(MultipartFile file){
 
+        //Debug
+        System.out.println(" " + file.getOriginalFilename() + " " + file.getContentType() + " |||");
+
+
         if(documentService.isValid(file)){
             String result = documentService.uploadFile(file);
+            return result.equals("Successful") ?
+                    ResponseEntity.ok("File uploaded") :
+                    ResponseEntity.badRequest().body("File not uploaded");
         }
-        return null;
+        return ResponseEntity.badRequest().body("File is not valid");
     }
     //как вариант для регестрации скинуть новый микросревис под эту задачу
 }
