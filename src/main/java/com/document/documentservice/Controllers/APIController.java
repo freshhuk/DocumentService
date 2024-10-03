@@ -26,13 +26,15 @@ public class APIController {
     }
 
 
-    //Задачи о этом файле находятся в доках ворда
+    /**
+     * This method accepts a file, if it is valid,
+     * then this file is sent to the microservice
+     * for loading into the database and subsequent processing
+     * @param file  uploaded file from html form
+     * @return status code
+     */
     @PostMapping("/uploadDocument")
     public ResponseEntity<String> uploadDocument(MultipartFile file){
-
-        //Debug
-        System.out.println(" " + file.getOriginalFilename() + " " + file.getContentType() + " |||");
-
 
         if(documentService.isValid(file)){
             String result = documentService.uploadFile(file);
@@ -43,13 +45,5 @@ public class APIController {
         return ResponseEntity.badRequest().body("File is not valid");
     }
 
-    @PostMapping("/send")
-    public ResponseEntity<?> send(@RequestBody DocumentDTO documentDTO){
-        if(documentDTO != null){
-            documentService.send(documentDTO);
-            return ResponseEntity.ok("Send model ok");
-        }
-        return  ResponseEntity.badRequest().body("Error");
-    }
     //как вариант для регестрации скинуть новый микросревис под эту задачу
 }

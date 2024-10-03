@@ -24,21 +24,29 @@ public class DocumentProcessingService {
 
     //сервис для валидации документа а так же отправка его в базу данных
 
+
+    public String uploadFile(MultipartFile file){
+        try{
+            DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());
+            sendInQueue(documentDTO);
+            return "Successful";
+        } catch (Exception ex){
+            System.out.println("Error from uploaded file " + ex);
+            return "Error";
+        }
+    }
+
+    private void sendInQueue(DocumentDTO documentDTO){
+        rabbitTemplate.convertAndSend(queueName, documentDTO);
+    }
     /**
      * Method checks is valid file
      * If this .docx file and file not empty then file is valid. Another - not valid
-     * @param file - checking file
+     * @param file  checking file
      * @return true if file is valid, else false
      */
     public boolean isValid(MultipartFile file){
         return !file.isEmpty() && file.getContentType().equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
-    }
-    public String uploadFile(MultipartFile file){
-        return "ok";
-    }
-
-    public void send(DocumentDTO documentDTO){
-        rabbitTemplate.convertAndSend(queueName, documentDTO);
     }
 }
