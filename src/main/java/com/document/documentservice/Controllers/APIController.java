@@ -1,5 +1,6 @@
 package com.document.documentservice.Controllers;
 
+import com.document.documentservice.Domain.Models.DocumentDTO;
 import com.document.documentservice.Services.DocumentProcessingService;
 import lombok.AllArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,10 +44,10 @@ public class APIController {
     }
 
     @PostMapping("/send")
-    public ResponseEntity<?> send(@RequestBody String message){
-        if(!message.isEmpty()){
-            documentService.send(message);
-            return ResponseEntity.ok("Send message ok");
+    public ResponseEntity<?> send(@RequestBody DocumentDTO documentDTO){
+        if(documentDTO != null){
+            documentService.send(documentDTO);
+            return ResponseEntity.ok("Send model ok");
         }
         return  ResponseEntity.badRequest().body("Error");
     }

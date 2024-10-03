@@ -1,5 +1,6 @@
 package com.document.documentservice.Services;
 
+import com.document.documentservice.Domain.Models.DocumentDTO;
 import lombok.Setter;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +38,7 @@ public class DocumentProcessingService {
         return "ok";
     }
 
-    public void send(String message){
-        rabbitTemplate.convertAndSend(queueName, message);
+    public void send(DocumentDTO documentDTO){
+        rabbitTemplate.convertAndSend(queueName, documentDTO);
     }
 }
