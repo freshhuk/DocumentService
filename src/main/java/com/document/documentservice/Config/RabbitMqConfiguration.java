@@ -14,7 +14,16 @@ import org.springframework.context.annotation.Configuration;
 public class RabbitMqConfiguration {
 
     @Value("${queue.name}")
-    private String queueName;
+    private String queueDataName;
+
+    @Value("${queueMongo.name}")
+    private String queueMongoName;
+
+    @Value("${queueMongoStatus.name}")
+    private String queueMongoStatus;
+
+    @Value("${StatusDataQueue}")
+    private String queueDataStatus;
 
     @Value("${spring.rabbitmq.username}")
     private String queueUserName;
@@ -23,7 +32,19 @@ public class RabbitMqConfiguration {
     private String queuePassword;
     @Bean
     public Queue queue(){
-        return new Queue(queueName, false);
+        return new Queue(queueDataName, false);
+    }
+    @Bean
+    public Queue queueMongo(){
+        return new Queue(queueMongoName, false);
+    }
+    @Bean
+    public Queue queueMongoStatus(){
+        return new Queue(queueMongoStatus, false);
+    }
+    @Bean
+    public Queue queueDataStatus(){
+        return new Queue(queueDataStatus, false);
     }
 
     @Bean

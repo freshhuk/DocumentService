@@ -22,9 +22,6 @@ public class DocumentProcessingService {
     }
 
 
-    //сервис для валидации документа а так же отправка его в базу данных
-
-
     public String uploadFile(MultipartFile file){
         try{
             DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());

@@ -7,22 +7,24 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
+import java.util.List;
+
 @SpringBootApplication
 public class DocumentServiceApplication {
 
     private final RabbitAdmin rabbitAdmin;
 
-    private final Queue queue;
+    private final List<Queue> queues;
 
     @Autowired
-    public DocumentServiceApplication(RabbitAdmin rabbitAdmin, Queue queue) {
+    public DocumentServiceApplication(RabbitAdmin rabbitAdmin, List<Queue> queues) {
         this.rabbitAdmin = rabbitAdmin;
-        this.queue = queue;
+        this.queues = queues;
     }
 
     @PostConstruct
-    public void declareQueue(){
-        rabbitAdmin.declareQueue(queue);
+    public void declareQueues() {
+        queues.forEach(rabbitAdmin::declareQueue);
     }
 
     public static void main(String[] args) {
