@@ -2,11 +2,14 @@ package com.document.documentservice.Services;
 
 import com.document.documentservice.Domain.Models.DocumentDTO;
 import lombok.Setter;
+import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.concurrent.CountDownLatch;
 
 @Setter
 @Service
@@ -16,6 +19,8 @@ public class DocumentProcessingService {
     private String queueName;
 
     private final RabbitTemplate rabbitTemplate;
+    private CountDownLatch latch = new CountDownLatch(1);
+    private String status="";
 
     public DocumentProcessingService(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
@@ -26,10 +31,27 @@ public class DocumentProcessingService {
         try{
             DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());
             sendInQueue(documentDTO);
-            return "Successful";
+            latch.await();
+            System.out.println("Hmm" + status);
+            if(status.equals("Successful")){
+                return "Successful";
+            } else{
+                return "Error";
+            }
+
         } catch (Exception ex){
             System.out.println("Error from uploaded file " + ex);
             return "Error";
+        }
+    }
+
+    @RabbitListener(queues = "StatusDataQueue")
+    public void receiveStatus(String statusData){
+        System.out.println("Status" + statusData);
+        if(statusData.equals("AllDone")){
+            status = "Successful";
+        } else if (statusData.equals("AllError")){
+            status = "Error";
         }
     }
 

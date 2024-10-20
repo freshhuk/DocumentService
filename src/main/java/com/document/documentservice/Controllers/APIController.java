@@ -44,6 +44,4 @@ public class APIController {
         }
         return ResponseEntity.badRequest().body("File is not valid");
     }
-
-    //как вариант для регестрации скинуть новый микросревис под эту задачу
 }

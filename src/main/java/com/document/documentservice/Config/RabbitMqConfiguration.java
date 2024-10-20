@@ -22,7 +22,7 @@ public class RabbitMqConfiguration {
     @Value("${queueMongoStatus.name}")
     private String queueMongoStatus;
 
-    @Value("${StatusDataQueue}")
+    @Value("${queueDataStatus.name}")
     private String queueDataStatus;
 
     @Value("${spring.rabbitmq.username}")
