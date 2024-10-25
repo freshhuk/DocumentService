@@ -2,6 +2,8 @@ package com.document.documentservice.Services;
 
 import com.document.documentservice.Domain.Models.DocumentDTO;
 import lombok.Setter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +23,9 @@ public class DocumentProcessingService {
     private final RabbitTemplate rabbitTemplate;
     private CountDownLatch latch = new CountDownLatch(1);
     private String status="";
+    private final static Logger logger = LoggerFactory.getLogger(DocumentProcessingService.class);
 
+    @Autowired
     public DocumentProcessingService(RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
     }
@@ -40,14 +44,14 @@ public class DocumentProcessingService {
             }
 
         } catch (Exception ex){
-            System.out.println("Error from uploaded file " + ex);
+            logger.error("Error from uploaded file " + ex);
             return "Error";
         }
     }
 
     @RabbitListener(queues = "StatusDataQueue")
     public void receiveStatus(String statusData){
-        System.out.println("Status" + statusData);
+        logger.info("Status" + statusData);
         if(statusData.equals("AllDone")){
             status = "Successful";
         } else if (statusData.equals("AllError")){
