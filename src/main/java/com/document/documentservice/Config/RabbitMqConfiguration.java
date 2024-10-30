@@ -1,6 +1,9 @@
 package com.document.documentservice.Config;
 
 import lombok.Setter;
+import org.springframework.amqp.core.Binding;
+import org.springframework.amqp.core.BindingBuilder;
+import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -47,6 +50,19 @@ public class RabbitMqConfiguration {
         return new Queue(queueDataStatus, false);
     }
 
+    @Bean
+    public DirectExchange directExchange(){
+        return new DirectExchange("statusExchange");
+    }
+
+    @Bean
+    public Binding bindingDone() {
+        return BindingBuilder.bind(queueDataStatus()).to(directExchange()).with("doneRoutingKey");
+    }
+    @Bean
+    public Binding bindingAllDone() {
+        return BindingBuilder.bind(queueDataStatus()).to(directExchange()).with("allDoneRoutingKey");
+    }
     @Bean
     public CachingConnectionFactory connectionFactory(){
         CachingConnectionFactory connection = new CachingConnectionFactory("localhost");

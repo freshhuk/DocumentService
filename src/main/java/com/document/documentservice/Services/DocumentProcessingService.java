@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.CountDownLatch;
 
 @Setter
@@ -21,8 +23,8 @@ public class DocumentProcessingService {
     private String queueName;
 
     private final RabbitTemplate rabbitTemplate;
-    private CountDownLatch latch = new CountDownLatch(1);
-    private String status="";
+    private CountDownLatch latch;
+    private List<String> statusList = new ArrayList<>(); // Contains all status
     private final static Logger logger = LoggerFactory.getLogger(DocumentProcessingService.class);
 
     @Autowired
@@ -30,46 +32,46 @@ public class DocumentProcessingService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
-
-    public String uploadFile(MultipartFile file){
-        try{
+    public String uploadFile(MultipartFile file) {
+        try {
             DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());
+            latch = new CountDownLatch(2); // wait status processing
             sendInQueue(documentDTO);
-            latch.await();
-            System.out.println("Hmm" + status);
-            if(status.equals("Successful")){
+
+            latch.await(); // wait get status
+            logger.info("All status: " + statusList);
+
+            if (statusList.contains("AllDone")) {
                 return "Successful";
-            } else{
+            } else {
                 return "Error";
             }
 
-        } catch (Exception ex){
-            logger.error("Error from uploaded file " + ex);
+        } catch (Exception ex) {
+            logger.error("Error with file: " + ex);
             return "Error";
         }
     }
 
     @RabbitListener(queues = "StatusDataQueue")
-    public void receiveStatus(String statusData){
-        logger.info("Status" + statusData);
-        if(statusData.equals("AllDone")){
-            status = "Successful";
-        } else if (statusData.equals("AllError")){
-            status = "Error";
-        }
+    public void receiveStatus(String statusData) {
+        logger.info("Получен статус: " + statusData);
+        statusList.add(statusData);
+
+        latch.countDown();
+
     }
 
-    private void sendInQueue(DocumentDTO documentDTO){
+    private void sendInQueue(DocumentDTO documentDTO) {
         rabbitTemplate.convertAndSend(queueName, documentDTO);
     }
-    /**
-     * Method checks is valid file
-     * If this .docx file and file not empty then file is valid. Another - not valid
-     * @param file  checking file
-     * @return true if file is valid, else false
-     */
-    public boolean isValid(MultipartFile file){
-        return !file.isEmpty() && file.getContentType().equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
 
+    /**
+     * Проверяет, является ли файл допустимым (.docx и не пустой).
+     * @param file проверяемый файл
+     * @return true, если файл допустим, иначе false
+     */
+    public boolean isValid(MultipartFile file) {
+        return !file.isEmpty() && file.getContentType().equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     }
 }
