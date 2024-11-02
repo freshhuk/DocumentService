@@ -10,10 +10,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.TimeUnit;
 
 @Setter
 @Service
@@ -24,7 +22,7 @@ public class DocumentProcessingService {
 
     private final RabbitTemplate rabbitTemplate;
     private CountDownLatch latch;
-    private List<String> statusList = new ArrayList<>(); // Contains all status
+    private String finalStatus;
     private final static Logger logger = LoggerFactory.getLogger(DocumentProcessingService.class);
 
     @Autowired
@@ -35,42 +33,43 @@ public class DocumentProcessingService {
     public String uploadFile(MultipartFile file) {
         try {
             DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());
-            latch = new CountDownLatch(2); // wait status processing
+
+            latch = new CountDownLatch(1);  // set waiting one status
+
             sendInQueue(documentDTO);
 
-            latch.await(); // wait get status
-            logger.info("All status: " + statusList);
+            boolean received = latch.await(5, TimeUnit.SECONDS); // wait 5 seconds until we get the status
 
-            if (statusList.contains("AllDone")) {
-                return "Successful";
-            } else {
-                return "Error";
+            if (!received) {
+                logger.error("Status not received in time");
+                return "Error: Status not received in time";
             }
 
+
+            return finalStatus.equals("AllDone") ? "Successful" : "Error";
+
         } catch (Exception ex) {
-            logger.error("Error with file: " + ex);
+            logger.error("Error with file upload " + ex);
             return "Error";
         }
     }
 
-    @RabbitListener(queues = "StatusDataQueue")
+    /**
+     * Method for getting final status
+     * This status shows result all microservices
+     * @param statusData - final status
+     */
+    @RabbitListener(queues = "FinalStatusQueue")
     public void receiveStatus(String statusData) {
-        logger.info("Получен статус: " + statusData);
-        statusList.add(statusData);
-
+        logger.info("Status was got: " + statusData);
+        finalStatus = statusData;
         latch.countDown();
-
     }
 
     private void sendInQueue(DocumentDTO documentDTO) {
         rabbitTemplate.convertAndSend(queueName, documentDTO);
     }
 
-    /**
-     * Проверяет, является ли файл допустимым (.docx и не пустой).
-     * @param file проверяемый файл
-     * @return true, если файл допустим, иначе false
-     */
     public boolean isValid(MultipartFile file) {
         return !file.isEmpty() && file.getContentType().equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     }

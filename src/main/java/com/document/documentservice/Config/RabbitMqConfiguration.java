@@ -1,9 +1,6 @@
 package com.document.documentservice.Config;
 
 import lombok.Setter;
-import org.springframework.amqp.core.Binding;
-import org.springframework.amqp.core.BindingBuilder;
-import org.springframework.amqp.core.DirectExchange;
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory;
 import org.springframework.amqp.rabbit.core.RabbitAdmin;
@@ -28,11 +25,23 @@ public class RabbitMqConfiguration {
     @Value("${queueDataStatus.name}")
     private String queueDataStatus;
 
+    @Value("${queueFinalStatus.name}")
+    private String queueFinalStatus;
+
+
+
+
+
+
     @Value("${spring.rabbitmq.username}")
     private String queueUserName;
 
     @Value("${spring.rabbitmq.password}")
     private String queuePassword;
+
+
+
+
     @Bean
     public Queue queue(){
         return new Queue(queueDataName, false);
@@ -49,20 +58,11 @@ public class RabbitMqConfiguration {
     public Queue queueDataStatus(){
         return new Queue(queueDataStatus, false);
     }
-
     @Bean
-    public DirectExchange directExchange(){
-        return new DirectExchange("statusExchange");
+    public Queue queueFinalStatus(){
+        return new Queue(queueFinalStatus, false);
     }
 
-    @Bean
-    public Binding bindingDone() {
-        return BindingBuilder.bind(queueDataStatus()).to(directExchange()).with("doneRoutingKey");
-    }
-    @Bean
-    public Binding bindingAllDone() {
-        return BindingBuilder.bind(queueDataStatus()).to(directExchange()).with("allDoneRoutingKey");
-    }
     @Bean
     public CachingConnectionFactory connectionFactory(){
         CachingConnectionFactory connection = new CachingConnectionFactory("localhost");
