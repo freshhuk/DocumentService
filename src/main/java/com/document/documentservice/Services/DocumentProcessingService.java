@@ -30,6 +30,13 @@ public class DocumentProcessingService {
         this.rabbitTemplate = rabbitTemplate;
     }
 
+
+    /**
+     * Method sends document model on postgres microservice and
+     * wait result all microservices
+     * @param file uploaded file
+     * @return Successful if all action ended was success, else - error
+     */
     public String uploadFile(MultipartFile file) {
         try {
             DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());
@@ -44,10 +51,7 @@ public class DocumentProcessingService {
                 logger.error("Status not received in time");
                 return "Error: Status not received in time";
             }
-
-
             return finalStatus.equals("AllDone") ? "Successful" : "Error";
-
         } catch (Exception ex) {
             logger.error("Error with file upload " + ex);
             return "Error";
@@ -66,11 +70,42 @@ public class DocumentProcessingService {
         latch.countDown();
     }
 
+    /**
+     * Method sends a message to the queue
+     * @param documentDTO sent document
+     */
     private void sendInQueue(DocumentDTO documentDTO) {
         rabbitTemplate.convertAndSend(queueName, documentDTO);
     }
 
+    /**
+     * Method checks file, if this document valid
+     * @param file uploaded file
+     * @return true, if this document is valid, else false
+     */
     public boolean isValid(MultipartFile file) {
-        return !file.isEmpty() && file.getContentType().equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+        return !file.isEmpty() && isDocx(file) && isPdf(file);
+    }
+
+    /**
+     * Method checks file, it pdf or not
+     * @param file uploaded file
+     * @return true if it pdf, else - false
+     */
+    private boolean isPdf(MultipartFile file) {
+        String filename = file.getOriginalFilename();
+        return filename != null && file.getContentType() != null &&
+                filename.toLowerCase().endsWith(".pdf") && file.getContentType().equals("application/pdf");
+    }
+
+    /**
+     * Method checks file, it docx or not
+     * @param file uploaded file
+     * @return true if it docx, else false
+     */
+    private boolean isDocx(MultipartFile file){
+        String filename = file.getOriginalFilename();
+        return filename != null && file.getContentType() != null &&
+                filename.toLowerCase().endsWith(".docx") && file.getContentType().equals("application/vnd.openxmlformats-officedocument.wordprocessingml.document");
     }
 }
