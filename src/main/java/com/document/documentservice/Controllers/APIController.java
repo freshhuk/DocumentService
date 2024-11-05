@@ -45,4 +45,13 @@ public class APIController {
         }
         return ResponseEntity.badRequest().body("File is not valid");
     }
+
+    @PostMapping("/deleteAllDocument")
+    public ResponseEntity<String> deleteAllDocument(){
+        String result = documentService.deleteAllDoc();
+        logger.info("Status is got " + result);
+        return result.equals("Successful") ?
+                ResponseEntity.ok("Documents were deleted") :
+                ResponseEntity.badRequest().body("Documents didn't delete");
+    }
 }

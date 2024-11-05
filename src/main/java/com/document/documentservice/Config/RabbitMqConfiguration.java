@@ -40,8 +40,6 @@ public class RabbitMqConfiguration {
     private String queuePassword;
 
 
-
-
     @Bean
     public Queue queue(){
         return new Queue(queueDataName, false);

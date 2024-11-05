@@ -20,6 +20,10 @@ public class DocumentProcessingService {
     @Value("${queue.name}")
     private String queueName;
 
+    @Value("queueDataStatus.name")
+    private String queueDataStatus;
+
+
     private final RabbitTemplate rabbitTemplate;
     private CountDownLatch latch;
     private String finalStatus;
@@ -58,6 +62,16 @@ public class DocumentProcessingService {
         }
     }
 
+    public String deleteAllDoc(){
+        try{
+            sendMessageInQueue("Delete");
+            return "Successful";
+        } catch (Exception ex) {
+            logger.error("Error with deleting all document: " + ex);
+            return "Error";
+        }
+    }
+
     /**
      * Method for getting final status
      * This status shows result all microservices
@@ -77,6 +91,13 @@ public class DocumentProcessingService {
     private void sendInQueue(DocumentDTO documentDTO) {
         rabbitTemplate.convertAndSend(queueName, documentDTO);
     }
+    /**
+     * Method sends a message to the queue
+     * @param status sent status
+     */
+    private void sendMessageInQueue(String status) {
+        rabbitTemplate.convertAndSend(queueDataStatus, status);
+    }
 
     /**
      * Method checks file, if this document valid
@@ -84,7 +105,7 @@ public class DocumentProcessingService {
      * @return true, if this document is valid, else false
      */
     public boolean isValid(MultipartFile file) {
-        return !file.isEmpty() && isDocx(file) && isPdf(file);
+        return !file.isEmpty() && (isDocx(file) || isPdf(file));
     }
 
     /**
