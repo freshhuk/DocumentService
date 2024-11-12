@@ -1,6 +1,8 @@
 package com.document.documentservice.Services;
 
+import com.document.documentservice.Domain.Enums.MessageAction;
 import com.document.documentservice.Domain.Models.DocumentDTO;
+import com.document.documentservice.Domain.Models.MessageWrapper;
 import lombok.Setter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -44,10 +46,12 @@ public class DocumentProcessingService {
     public String uploadFile(MultipartFile file) {
         try {
             DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());
-
+            MessageWrapper message = new MessageWrapper(
+                    MessageAction.UPLOAD.toString(),
+                    documentDTO);
             latch = new CountDownLatch(1);  // set waiting one status
 
-            sendInQueue(documentDTO);
+            sendInQueue(queueName, message);
 
             boolean received = latch.await(5, TimeUnit.SECONDS); // wait 5 seconds until we get the status
 
@@ -62,9 +66,14 @@ public class DocumentProcessingService {
         }
     }
 
+    /**
+     * Method delete all entity in db
+     * @return status code
+     */
     public String deleteAllDoc(){
         try{
-            sendMessageInQueue("Delete");
+            MessageWrapper message = new MessageWrapper(MessageAction.DELETE.toString(), MessageAction.DELETE.toString());
+            sendInQueue(queueDataStatus, message);
             return "Successful";
         } catch (Exception ex) {
             logger.error("Error with deleting all document: " + ex);
@@ -78,26 +87,20 @@ public class DocumentProcessingService {
      * @param statusData - final status
      */
     @RabbitListener(queues = "FinalStatusQueue")
-    public void receiveStatus(String statusData) {
+    public void receiveStatus(MessageWrapper statusData) {
         logger.info("Status was got: " + statusData);
-        finalStatus = statusData;
+        finalStatus = statusData.getPayload().toString();
         latch.countDown();
     }
 
     /**
      * Method sends a message to the queue
-     * @param documentDTO sent document
+     * @param object sent message or document
      */
-    private void sendInQueue(DocumentDTO documentDTO) {
-        rabbitTemplate.convertAndSend(queueName, documentDTO);
+    private void sendInQueue(String queueName,MessageWrapper object) {
+        rabbitTemplate.convertAndSend(queueName, object);
     }
-    /**
-     * Method sends a message to the queue
-     * @param status sent status
-     */
-    private void sendMessageInQueue(String status) {
-        rabbitTemplate.convertAndSend(queueDataStatus, status);
-    }
+
 
     /**
      * Method checks file, if this document valid
