@@ -46,9 +46,11 @@ public class DocumentProcessingService {
     public String uploadFile(MultipartFile file) {
         try {
             DocumentDTO documentDTO = new DocumentDTO(file.getOriginalFilename(), file.getContentType());
-            MessageWrapper message = new MessageWrapper(
-                    MessageAction.UPLOAD.toString(),
-                    documentDTO);
+            MessageWrapper<DocumentDTO> message = new MessageWrapper<>(MessageAction.UPLOAD.toString(), documentDTO);
+
+            System.out.println(documentDTO);
+            System.out.println(message.getAction() + " " + message.getPayload().toString());
+
             latch = new CountDownLatch(1);  // set waiting one status
 
             sendInQueue(queueName, message);
@@ -72,7 +74,7 @@ public class DocumentProcessingService {
      */
     public String deleteAllDoc(){
         try{
-            MessageWrapper message = new MessageWrapper(MessageAction.DELETE.toString(), MessageAction.DELETE.toString());
+            MessageWrapper<String> message = new MessageWrapper<>(MessageAction.DELETE.toString(), MessageAction.DELETE.toString());
             sendInQueue(queueDataStatus, message);
             return "Successful";
         } catch (Exception ex) {
@@ -87,9 +89,9 @@ public class DocumentProcessingService {
      * @param statusData - final status
      */
     @RabbitListener(queues = "FinalStatusQueue")
-    public void receiveStatus(MessageWrapper statusData) {
+    public void receiveStatus(MessageWrapper<String> statusData) {
         logger.info("Status was got: " + statusData);
-        finalStatus = statusData.getPayload().toString();
+        finalStatus = statusData.getPayload();
         latch.countDown();
     }
 
@@ -97,7 +99,7 @@ public class DocumentProcessingService {
      * Method sends a message to the queue
      * @param object sent message or document
      */
-    private void sendInQueue(String queueName,MessageWrapper object) {
+    private void sendInQueue(String queueName,MessageWrapper<?> object) {
         rabbitTemplate.convertAndSend(queueName, object);
     }
 
