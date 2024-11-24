@@ -1,6 +1,7 @@
 package com.document.documentservice.Services;
 
 import com.document.documentservice.Domain.Enums.MessageAction;
+import com.document.documentservice.Domain.Enums.QueueStatus;
 import com.document.documentservice.Domain.Models.DocumentDTO;
 import com.document.documentservice.Domain.Models.MessageWrapper;
 import lombok.Setter;
@@ -24,6 +25,8 @@ public class DocumentProcessingService {
 
     @Value("queueDataStatus.name")
     private String queueDataStatus;
+    @Value("${queueAPIStatus.name}")
+    private String queueAPIStatus;
 
 
     private final RabbitTemplate rabbitTemplate;
@@ -61,7 +64,7 @@ public class DocumentProcessingService {
                 logger.error("Status not received in time");
                 return "Error: Status not received in time";
             }
-            return finalStatus.equals("AllDone") ? "Successful" : "Error";
+            return finalStatus.equals(QueueStatus.ALL_DONE.toString()) ? "Successful" : "Error";
         } catch (Exception ex) {
             logger.error("Error with file upload " + ex);
             return "Error";
@@ -75,8 +78,19 @@ public class DocumentProcessingService {
     public String deleteAllDoc(){
         try{
             MessageWrapper<String> message = new MessageWrapper<>(MessageAction.DELETE.toString(), MessageAction.DELETE.toString());
-            sendInQueue(queueDataStatus, message);
-            return "Successful";
+
+            latch = new CountDownLatch(1);
+
+            sendInQueue(queueAPIStatus, message);
+
+            boolean received = latch.await(5, TimeUnit.SECONDS); // wait 5 seconds until we get the status
+
+            if (!received) {
+                logger.error("Status not received in time");
+                return "Error: Status not received in time";
+            }
+            return finalStatus.equals(QueueStatus.ALL_DONE.toString()) ? "Successful" : "Error";
+
         } catch (Exception ex) {
             logger.error("Error with deleting all document: " + ex);
             return "Error";
@@ -103,7 +117,7 @@ public class DocumentProcessingService {
         rabbitTemplate.convertAndSend(queueName, object);
     }
 
-
+    
     /**
      * Method checks file, if this document valid
      * @param file uploaded file

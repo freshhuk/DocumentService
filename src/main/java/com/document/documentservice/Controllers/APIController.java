@@ -52,6 +52,6 @@ public class APIController {
         logger.info("Status is got " + result);
         return result.equals("Successful") ?
                 ResponseEntity.ok("Documents were deleted") :
-                ResponseEntity.badRequest().body("Documents didn't delete");
+                ResponseEntity.badRequest().body("Documents weren't delete");
     }
 }

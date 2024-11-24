@@ -30,7 +30,10 @@ public class RabbitMqConfiguration {
 
     @Value("${queueFinalStatus.name}")
     private String queueFinalStatus;
-
+    @Value("${queueMongoModel.name}")
+    private String queueMongoModel;
+    @Value("${queueAPIStatus.name}")
+    private String queueAPIStatus;
 
 
 
@@ -56,12 +59,20 @@ public class RabbitMqConfiguration {
         return new Queue(queueMongoStatus, false);
     }
     @Bean
+    public Queue queueMongoModel(){
+        return new Queue(queueMongoModel, false);
+    }
+    @Bean
     public Queue queueDataStatus(){
         return new Queue(queueDataStatus, false);
     }
     @Bean
     public Queue queueFinalStatus(){
         return new Queue(queueFinalStatus, false);
+    }
+    @Bean
+    public Queue queueAPIStatus(){
+        return new Queue(queueAPIStatus, false);
     }
 
     @Bean
