@@ -1,9 +1,10 @@
 package com.document.documentservice.Services;
 
 import com.document.documentservice.Domain.Models.DocumentDTO;
+import com.document.documentservice.Domain.Models.LoginModel;
 import com.document.documentservice.Domain.Models.MessageWrapper;
+import com.document.documentservice.Domain.Models.RegisterModel;
 import com.fasterxml.jackson.core.JsonParser;
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.DeserializationContext;
 import com.fasterxml.jackson.databind.JsonDeserializer;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -14,7 +15,7 @@ public class MessageWrapperDeserializer extends JsonDeserializer<MessageWrapper<
 
     @Override
     public MessageWrapper<?> deserialize(JsonParser jp, DeserializationContext ctxt)
-            throws IOException, JsonProcessingException {
+            throws IOException {
         JsonNode node = jp.getCodec().readTree(jp);
         String action = node.get("action").asText();
 
@@ -23,15 +24,17 @@ public class MessageWrapperDeserializer extends JsonDeserializer<MessageWrapper<
         if (node.has("payload")) {
             JsonNode payloadNode = node.get("payload");
 
-            // Логика для обработки строки
             if (payloadNode.isTextual()) {
-                payload = payloadNode.asText();  // Если это строка
+                payload = payloadNode.asText();  // String
             }
-            // Логика для десериализации объекта DocumentDTO
             else if (payloadNode.has("fileName") && payloadNode.has("fileType")) {
-                payload = jp.getCodec().treeToValue(payloadNode, DocumentDTO.class);  // Если это объект DocumentDTO
+                payload = jp.getCodec().treeToValue(payloadNode, DocumentDTO.class);  //  DocumentDTO
+            } else if (payloadNode.has("login") && payloadNode.has("password")) {//  login model
+                payload = jp.getCodec().treeToValue(payloadNode, LoginModel.class);
+            } else if (payloadNode.has("loginRegister") && payloadNode.has("password") && payloadNode.has("confirmPassword")) {
+                payload = jp.getCodec().treeToValue(payloadNode, RegisterModel.class);  // RegisterModel
             } else {
-                payload = jp.getCodec().treeToValue(payloadNode, Object.class); // Дефолтная обработка
+                payload = jp.getCodec().treeToValue(payloadNode, Object.class); // default
             }
         } else {
             payload = null;

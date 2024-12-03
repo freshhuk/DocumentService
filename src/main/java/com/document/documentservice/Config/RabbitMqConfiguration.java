@@ -35,8 +35,10 @@ public class RabbitMqConfiguration {
     @Value("${queueAPIStatus.name}")
     private String queueAPIStatus;
 
-
-
+    @Value("${queueAuthModel.name}")
+    private String queueAuthModel;
+    @Value("${queueAuthStatus.name}")
+    private String queueAuthStatus;
 
 
     @Value("${spring.rabbitmq.username}")
@@ -73,6 +75,14 @@ public class RabbitMqConfiguration {
     @Bean
     public Queue queueAPIStatus(){
         return new Queue(queueAPIStatus, false);
+    }
+    @Bean
+    public Queue queueAuthModel(){
+        return new Queue(queueAuthModel, false);
+    }
+    @Bean
+    public Queue queueAuthStatus(){
+        return new Queue(queueAuthStatus, false);
     }
 
     @Bean
