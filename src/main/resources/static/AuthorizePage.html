@@ -53,16 +53,17 @@
 <h1>On this page you can register or login</h1>
 
 <div class="form-container">
+
     <h2>Registration</h2>
-    <form action="/auth/reg" method="POST">
-        <label for="loginRegister">Login:</label>
-        <input type="text" id="loginRegister" name="loginRegister" required>
+    <form action="/auth/reg" method="post">
+        <label for="loginRegister">Login:</label><br>
+        <input type="text" id="loginRegister" name="loginRegister" required><br><br>
 
-        <label for="reg-password">Password:</label>
-        <input type="password" id="reg-password" name="password" required>
+        <label for="password">Password:</label><br>
+        <input type="password" id="password" name="password" required><br><br>
 
-        <label for="reg-confirm-password">Confirm Password:</label>
-        <input type="password" id="reg-confirm-password" name="confirmPassword" required>
+        <label for="confirmPassword">Confirm Password:</label><br>
+        <input type="password" id="confirmPassword" name="confirmPassword" required><br><br>
 
         <button type="submit">Register</button>
     </form>
@@ -70,7 +71,7 @@
 
 <div class="form-container">
     <h2>Login</h2>
-    <form action="/auth/log" method="POST">
+    <form action="/auth/log" method="post">
         <label for="login-login">Login:</label>
         <input type="text" id="login-login" name="login" required>
 

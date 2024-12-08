@@ -11,8 +11,11 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
@@ -21,15 +24,16 @@ public class AuthService {
 
     @Value("${queueAuthModel.name}")
     private String queueAuthModel;
-
+    private final JWTService jwtService;
     private final RabbitTemplate rabbitTemplate;
     private CountDownLatch latch;
     private String authStatus;
     private final static Logger logger = LoggerFactory.getLogger(AuthService.class);
 
     @Autowired
-    public AuthService(RabbitTemplate rabbitTemplate) {
+    public AuthService(JWTService jwtService,RabbitTemplate rabbitTemplate) {
         this.rabbitTemplate = rabbitTemplate;
+        this.jwtService =jwtService;
     }
 
     /**
@@ -40,17 +44,26 @@ public class AuthService {
         try{
             MessageWrapper<RegisterModel> message = new MessageWrapper<>(MessageAction.REGISTER.toString(), registerModel);
 
+
             latch = new CountDownLatch(1);
 
             sendInQueue(queueAuthModel, message);
 
             boolean received = latch.await(5, TimeUnit.SECONDS); // wait 5 seconds until we get the status
 
+            String username = jwtService.parseToken(authStatus).getSubject();
+            if (username != null && !authStatus.equals(QueueStatus.BAD.toString())) {
+                // Если токен валиден, авторизуем пользователя
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+
             if (!received) {
                 logger.error("Status not received in time");
                 return "Error: Status not received in time";
             }
-            return !authStatus.equals(QueueStatus.BAD.toString()) ? "Successful" : "Error";
+            return !authStatus.equals(QueueStatus.BAD.toString()) ? authStatus : "Error";
 
         } catch (Exception ex){
             logger.error("Error with authorize method " + ex);
@@ -68,11 +81,19 @@ public class AuthService {
 
             boolean received = latch.await(5, TimeUnit.SECONDS); // wait 5 seconds until we get the status
 
+            String username = jwtService.parseToken(authStatus).getSubject();
+            if (username != null && !authStatus.equals(QueueStatus.BAD.toString())) {
+                // Если токен валиден, авторизуем пользователя
+                UsernamePasswordAuthenticationToken authToken =
+                        new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
+                SecurityContextHolder.getContext().setAuthentication(authToken);
+            }
+
             if (!received) {
                 logger.error("Status not received in time");
                 return "Error: Status not received in time";
             }
-            return !authStatus.equals(QueueStatus.BAD.toString()) ? "Successful" : "Error";
+            return !authStatus.equals(QueueStatus.BAD.toString()) ? authStatus : "Error";
 
         } catch (Exception ex){
             logger.error("Error with authorize method " + ex);
