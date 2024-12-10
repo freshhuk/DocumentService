@@ -1,9 +1,9 @@
 package com.document.documentservice.Security;
 
-import com.document.documentservice.Services.DocumentProcessingService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.SignatureException;
 import io.jsonwebtoken.security.Keys;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +36,7 @@ public class JWTService {
                     .getBody();
         } catch (ExpiredJwtException e) {
             throw new RuntimeException("Token expired", e);
-        } catch (io.jsonwebtoken.SignatureException e) {
+        } catch (SignatureException e) {
             throw new RuntimeException("Invalid token signature", e);
         } catch (Exception e) {
             throw new RuntimeException("Invalid JWT token", e);

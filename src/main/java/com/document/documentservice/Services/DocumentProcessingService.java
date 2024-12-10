@@ -23,8 +23,6 @@ public class DocumentProcessingService {
     @Value("${queue.name}")
     private String queueName;
 
-    @Value("queueDataStatus.name")
-    private String queueDataStatus;
     @Value("${queueAPIStatus.name}")
     private String queueAPIStatus;
 

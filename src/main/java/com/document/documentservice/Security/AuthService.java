@@ -53,7 +53,6 @@ public class AuthService {
 
             String username = jwtService.parseToken(authStatus).getSubject();
             if (username != null && !authStatus.equals(QueueStatus.BAD.toString())) {
-                // Если токен валиден, авторизуем пользователя
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
@@ -83,7 +82,6 @@ public class AuthService {
 
             String username = jwtService.parseToken(authStatus).getSubject();
             if (username != null && !authStatus.equals(QueueStatus.BAD.toString())) {
-                // Если токен валиден, авторизуем пользователя
                 UsernamePasswordAuthenticationToken authToken =
                         new UsernamePasswordAuthenticationToken(username, null, new ArrayList<>());
                 SecurityContextHolder.getContext().setAuthentication(authToken);
